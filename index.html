@@ -1098,6 +1098,13 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
     </div>
   </div>
 
+  <div class="chart-block">
+    <div class="chart-title">Phân bổ theo Định dạng &amp; Đơn giá hiệu quả trung bình</div>
+    <div class="chart-question">Mỗi định dạng nhận bao nhiêu ngân sách, và đạt CPM / CPE / CPV trung bình ra sao?</div>
+    <div class="chart-wrap tall"><canvas id="chartPostFormat"></canvas></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái). 3 đường = đơn giá trung bình của định dạng (trục phải): <b>CPM</b> (chi phí/1.000 hiển thị) &amp; <b>CPE</b> (chi phí/lượt tương tác) cho mọi định dạng; <b>CPV</b> (chi phí/lượt xem) chỉ Video vì chỉ video có lượt xem.</div>
+  </div>
+
   <div class="tabs" id="postTabs"></div>
 
   <div class="chart-block">
@@ -1105,13 +1112,6 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
     <div class="chart-question" id="postChartQ"></div>
     <div class="chart-wrap tall"><canvas id="chartPost"></canvas></div>
     <div style="margin-top:10px;font-size:11px;color:var(--text-soft)" id="postChartLegend"></div>
-  </div>
-
-  <div class="chart-block">
-    <div class="chart-title">Phân bổ theo Định dạng &amp; Đơn giá hiệu quả</div>
-    <div class="chart-question" id="postFmtQ">Đơn giá hiệu quả theo từng định dạng, đổi theo tab Mục tiêu phía trên.</div>
-    <div class="chart-wrap tall"><canvas id="chartPostFormat"></canvas></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái) · Đường cam = đơn giá trung bình của định dạng theo metric của mục tiêu đang chọn (trục phải). Đổi tab Mục tiêu phía trên: <b>Reach → CPM</b>, <b>Engagement → CPE</b> (mọi định dạng); <b>Thruplay → CPV</b> (chỉ Video vì chỉ video có lượt xem).</div>
   </div>
 
   <div class="table-title" id="postTableTitle"></div>
@@ -2907,11 +2907,8 @@ function renderAccountSummary() {
 function renderPostFormat() {
   const cv = document.getElementById('chartPostFormat');
   if (!cv) return;
-  const o = state.postTab || OBJECTIVES[0];   // active objective tab
   const data = filterData();
 
-  const metricName = o==='REACH' ? 'CPM' : o==='ENGAGEMENT' ? 'CPE' : (o==='VIEW'||o==='THRUPLAY') ? 'CPV' : o==='TRAFFIC' ? 'CPC' : 'CP';
-  const metricFull = { CPM:'chi phí / 1.000 hiển thị', CPE:'chi phí / lượt tương tác', CPV:'chi phí / lượt xem Thruplay', CPC:'chi phí / lượt click link' }[metricName] || '';
   // blended per-format aggregate (gộp tất cả mục tiêu trong mỗi định dạng)
   const agg = {};
   data.forEach(r => {
@@ -2922,30 +2919,23 @@ function renderPostFormat() {
   });
   const fmtKeys = Object.keys(agg).sort((x,y)=>agg[y].cost-agg[x].cost);
 
-  // metric of the active tab, computed blended per format.
-  // CPM/CPE hiển thị cho mọi định dạng; CPV chỉ định dạng thực sự có lượt xem video; CPC chỉ định dạng thực sự có click link.
-  function effVal(a) {
-    if (!a || !a.cost || !a.impression) return null;
-    if (o==='REACH')      return a.cost/a.impression*1000;
-    if (o==='ENGAGEMENT') return a.engagement > 0 ? a.cost/a.engagement : null;
-    if (o==='VIEW'||o==='THRUPLAY') return (a.thruplay/a.impression >= 0.01) ? a.cost/a.thruplay : null;
-    if (o==='TRAFFIC')    return (a.link_click/a.impression >= 0.001) ? a.cost/a.link_click : null;
-    return null;
-  }
   const spendVals = fmtKeys.map(f => agg[f].cost);
-  const effVals = fmtKeys.map(f => effVal(agg[f]));
+  const cpmVals = fmtKeys.map(f => { const a=agg[f]; return a.impression ? a.cost/a.impression*1000 : null; });
+  const cpeVals = fmtKeys.map(f => { const a=agg[f]; return a.engagement > 0 ? a.cost/a.engagement : null; });
+  // CPV chỉ tính cho định dạng thực sự có lượt xem video (thruplay đáng kể) → loại ảnh
+  const cpvVals = fmtKeys.map(f => { const a=agg[f]; return (a.impression && a.thruplay/a.impression >= 0.01) ? a.cost/a.thruplay : null; });
 
-  // dynamic question text reflecting the active tab
-  const q = document.getElementById('postFmtQ');
-  if (q) q.innerHTML = `Tab đang chọn: <b>${objLabel(o)}</b> — <b>${metricName} trung bình</b> (${metricFull}) theo từng định dạng. Cột = tổng chi tiêu theo định dạng.` + (metricName==='CPV' ? ' Chỉ định dạng có lượt xem video (Video) mới có CPV.' : '');
+  const lineCommon = { borderWidth:3, pointRadius:5, pointHoverRadius:7, pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.25, spanGaps:false, yAxisID:'y1', order:1 };
 
   destroy('chartPostFormat');
   charts.chartPostFormat = new Chart(cv, {
     data: {
       labels: fmtKeys,
       datasets: [
-        { type:'bar', label:'Chi tiêu', data: spendVals, backgroundColor: C.green, borderRadius:6, maxBarThickness:72, yAxisID:'y', order:2 },
-        { type:'line', label: metricName+' trung bình', data: effVals, borderColor:'#FF8A4C', backgroundColor:'#FF8A4C', borderWidth:3, pointRadius:6, pointHoverRadius:8, pointBackgroundColor:'#FF8A4C', pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.25, spanGaps:false, yAxisID:'y1', order:1 }
+        { type:'bar', label:'Chi tiêu', data: spendVals, backgroundColor: C.green, borderRadius:6, maxBarThickness:72, yAxisID:'y', order:4 },
+        { type:'line', label:'CPM TB', data: cpmVals, borderColor:'#1F8857', backgroundColor:'#1F8857', pointBackgroundColor:'#1F8857', ...lineCommon },
+        { type:'line', label:'CPE TB', data: cpeVals, borderColor:'#FF8A4C', backgroundColor:'#FF8A4C', pointBackgroundColor:'#FF8A4C', ...lineCommon },
+        { type:'line', label:'CPV TB', data: cpvVals, borderColor:'#2563EB', backgroundColor:'#2563EB', pointBackgroundColor:'#2563EB', ...lineCommon }
       ]
     },
     options: {
@@ -2957,7 +2947,7 @@ function renderPostFormat() {
       scales:{
         x:{ ticks:{ font:{size:11} } },
         y:{ beginAtZero:true, position:'left', ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'Chi tiêu', color:'#5C7060', font:{size:10}} },
-        y1:{ beginAtZero:true, position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:metricName+' trung bình', color:'#5C7060', font:{size:10}} }
+        y1:{ beginAtZero:true, position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'Đơn giá TB (CPM/CPE/CPV)', color:'#5C7060', font:{size:10}} }
       }
     }
   });
@@ -3023,7 +3013,6 @@ document.getElementById('postTabs').addEventListener('click', e => {
     e.target.classList.add('active');
     state.postTab = e.target.dataset.obj;
     renderPost();
-    renderPostFormat();
   }
 });
 
