@@ -1053,7 +1053,7 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
     <div class="chart-title">Phân bổ theo Mục tiêu — Kế hoạch vs Thực tế</div>
     <div class="chart-question">Tỷ trọng ngân sách dự kiến và thực tế đã chi giữa các mục tiêu khác nhau ra sao?</div>
     <div class="chart-wrap pie"><canvas id="chartOverview"></canvas></div>
-    <div style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:6px;">Vòng trong (nhạt) = <b>Kế hoạch</b> · Vòng ngoài (đậm) = <b>Thực tế</b> · di chuột để xem số tiền &amp; tỷ trọng</div>
+    <div style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:6px;">Vòng ngoài (đậm) = <b>Thực tế</b> · Vòng trong (nhạt) = <b>Kế hoạch</b> · di chuột để xem số tiền &amp; tỷ trọng</div>
   </div>
 
   <div class="compare-grid">
@@ -1108,10 +1108,10 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
   </div>
 
   <div class="chart-block">
-    <div class="chart-title">Phân bổ theo Định dạng & CPM trung bình</div>
-    <div class="chart-question">Định dạng nào nhận nhiều ngân sách, và định dạng nào có CPM trung bình tối ưu nhất?</div>
-    <div class="chart-wrap"><canvas id="chartPostFormat"></canvas></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái) · Đường = CPM trung bình của định dạng (trục phải).</div>
+    <div class="chart-title">Phân bổ theo Định dạng &amp; Đơn giá hiệu quả</div>
+    <div class="chart-question" id="postFmtQ">Đơn giá hiệu quả theo từng định dạng, đổi theo tab Mục tiêu phía trên.</div>
+    <div class="chart-wrap tall"><canvas id="chartPostFormat"></canvas></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái) · Đường cam = đơn giá trung bình của định dạng theo metric của mục tiêu đang chọn (trục phải). Đổi tab Mục tiêu phía trên: <b>Reach → CPM</b>, <b>Engagement → CPE</b> (mọi định dạng); <b>Thruplay → CPV</b> (chỉ Video vì chỉ video có lượt xem).</div>
   </div>
 
   <div class="table-title" id="postTableTitle"></div>
@@ -1861,8 +1861,8 @@ function renderBudget() {
     data:{
       labels: objLabels,
       datasets:[
-        { label:'Kế hoạch', data: planVals, backgroundColor: objCols.map(c=>hexA(c,0.40)), borderColor:'#fff', borderWidth:2 },
-        { label:'Thực tế', data: actualVals, backgroundColor: objCols, borderColor:'#fff', borderWidth:2 }
+        { label:'Thực tế', data: actualVals, backgroundColor: objCols, borderColor:'#fff', borderWidth:2 },
+        { label:'Kế hoạch', data: planVals, backgroundColor: objCols.map(c=>hexA(c,0.40)), borderColor:'#fff', borderWidth:2 }
       ]
     },
     options:{
@@ -2907,36 +2907,57 @@ function renderAccountSummary() {
 function renderPostFormat() {
   const cv = document.getElementById('chartPostFormat');
   if (!cv) return;
+  const o = state.postTab || OBJECTIVES[0];   // active objective tab
   const data = filterData();
+
+  const metricName = o==='REACH' ? 'CPM' : o==='ENGAGEMENT' ? 'CPE' : (o==='VIEW'||o==='THRUPLAY') ? 'CPV' : o==='TRAFFIC' ? 'CPC' : 'CP';
+  const metricFull = { CPM:'chi phí / 1.000 hiển thị', CPE:'chi phí / lượt tương tác', CPV:'chi phí / lượt xem Thruplay', CPC:'chi phí / lượt click link' }[metricName] || '';
+  // blended per-format aggregate (gộp tất cả mục tiêu trong mỗi định dạng)
   const agg = {};
   data.forEach(r => {
     const f = POST_FORMAT[r[2]] || 'Khác';
-    if (!agg[f]) agg[f] = { cost:0, impression:0 };
-    agg[f].cost += r[7];
-    agg[f].impression += r[8];
+    agg[f] = agg[f] || { cost:0, impression:0, engagement:0, thruplay:0, link_click:0 };
+    const a = agg[f];
+    a.cost += r[7]; a.impression += r[8]; a.engagement += r[10]; a.thruplay += r[11]; a.link_click += (r[13] || 0);
   });
-  const keys = Object.keys(agg).sort((a,b)=>agg[b].cost-agg[a].cost);
-  const spendVals = keys.map(k => agg[k].cost);
-  const cpmVals = keys.map(k => agg[k].impression > 0 ? agg[k].cost/agg[k].impression*1000 : 0);
+  const fmtKeys = Object.keys(agg).sort((x,y)=>agg[y].cost-agg[x].cost);
+
+  // metric of the active tab, computed blended per format.
+  // CPM/CPE hiển thị cho mọi định dạng; CPV chỉ định dạng thực sự có lượt xem video; CPC chỉ định dạng thực sự có click link.
+  function effVal(a) {
+    if (!a || !a.cost || !a.impression) return null;
+    if (o==='REACH')      return a.cost/a.impression*1000;
+    if (o==='ENGAGEMENT') return a.engagement > 0 ? a.cost/a.engagement : null;
+    if (o==='VIEW'||o==='THRUPLAY') return (a.thruplay/a.impression >= 0.01) ? a.cost/a.thruplay : null;
+    if (o==='TRAFFIC')    return (a.link_click/a.impression >= 0.001) ? a.cost/a.link_click : null;
+    return null;
+  }
+  const spendVals = fmtKeys.map(f => agg[f].cost);
+  const effVals = fmtKeys.map(f => effVal(agg[f]));
+
+  // dynamic question text reflecting the active tab
+  const q = document.getElementById('postFmtQ');
+  if (q) q.innerHTML = `Tab đang chọn: <b>${objLabel(o)}</b> — <b>${metricName} trung bình</b> (${metricFull}) theo từng định dạng. Cột = tổng chi tiêu theo định dạng.` + (metricName==='CPV' ? ' Chỉ định dạng có lượt xem video (Video) mới có CPV.' : '');
+
   destroy('chartPostFormat');
   charts.chartPostFormat = new Chart(cv, {
     data: {
-      labels: keys,
+      labels: fmtKeys,
       datasets: [
-        { type:'bar', label:'Chi tiêu', data: spendVals, backgroundColor: C.green, borderRadius:6, maxBarThickness:64, yAxisID:'y', order:2 },
-        { type:'line', label:'CPM trung bình', data: cpmVals, borderColor: '#FF8A4C', backgroundColor:'#FF8A4C', borderWidth:3, pointRadius:4, pointBackgroundColor:'#FF8A4C', pointBorderColor:'#fff', pointBorderWidth:1, tension:0.25, yAxisID:'y1', order:1 }
+        { type:'bar', label:'Chi tiêu', data: spendVals, backgroundColor: C.green, borderRadius:6, maxBarThickness:72, yAxisID:'y', order:2 },
+        { type:'line', label: metricName+' trung bình', data: effVals, borderColor:'#FF8A4C', backgroundColor:'#FF8A4C', borderWidth:3, pointRadius:6, pointHoverRadius:8, pointBackgroundColor:'#FF8A4C', pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.25, spanGaps:false, yAxisID:'y1', order:1 }
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top' },
-        tooltip:{ callbacks:{ label: c => c.dataset.label + ': ' + fmtVND(c.parsed.y) } }
+        tooltip:{ callbacks:{ label: c => { if (c.parsed.y == null) return undefined; return c.dataset.label + ': ' + fmtVND(c.parsed.y); } } }
       },
       scales:{
         x:{ ticks:{ font:{size:11} } },
         y:{ beginAtZero:true, position:'left', ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'Chi tiêu', color:'#5C7060', font:{size:10}} },
-        y1:{ beginAtZero:true, position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'CPM TB', color:'#5C7060', font:{size:10}} }
+        y1:{ beginAtZero:true, position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:metricName+' trung bình', color:'#5C7060', font:{size:10}} }
       }
     }
   });
@@ -3002,6 +3023,7 @@ document.getElementById('postTabs').addEventListener('click', e => {
     e.target.classList.add('active');
     state.postTab = e.target.dataset.obj;
     renderPost();
+    renderPostFormat();
   }
 });
 
