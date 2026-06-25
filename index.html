@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VCB MeGO Launching · Performance Dashboard</title>
+<title>VCB × PMAX · Performance Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -441,6 +441,17 @@ h1, h2, h3, h4 {
 .chart-wrap.tall { height: 380px; }
 .chart-wrap.short { height: 260px; }
 .chart-wrap.pie { height: 300px; max-width: 520px; margin: 0 auto; }
+.cpm-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 520px; margin: 12px auto 0; }
+.cpm-tags:empty { display: none; }
+.cpm-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; color: var(--text-secondary);
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+}
+.cpm-tag i { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; }
+.cpm-tag b { color: var(--text-primary); font-weight: 800; }
+.cpm-tag .cpm-lab { color: var(--text-muted); font-weight: 600; }
 
 /* ============ TABLE ============ */
 .table-wrap {
@@ -978,8 +989,9 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
   <div class="compare-grid">
     <div class="chart-block">
       <div class="chart-title">Chi tiêu theo Định dạng nội dung</div>
-      <div class="chart-question">Ảnh đơn / Album / Video — định dạng nào nhận nhiều ngân sách?</div>
+      <div class="chart-question">Ảnh đơn / Album / Video — định dạng nào nhận nhiều ngân sách, và CPM trung bình ra sao?</div>
       <div class="chart-wrap pie"><canvas id="chartFormat"></canvas></div>
+      <div class="cpm-tags" id="formatCpmNote"></div>
     </div>
     <div class="chart-block">
       <div class="chart-title">Chi tiêu theo Chủ đề nội dung</div>
@@ -1015,13 +1027,6 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
       <div class="mg-item"><b>VR %</b> <span>(View Rate)</span> · Tỷ lệ Thruplay trên impression — đo % người xem hết video (≥15s hoặc 97% video).</div>
       <div class="mg-item"><b>CTR %</b> <span>(Click-Through Rate)</span> · Tỷ lệ click trên impression — đo mức độ tiêu đề + thumbnail kéo click.</div>
     </div>
-  </div>
-
-  <div class="chart-block">
-    <div class="chart-title">Phân bổ theo Định dạng &amp; Đơn giá hiệu quả trung bình</div>
-    <div class="chart-question">Mỗi định dạng nhận bao nhiêu ngân sách, và đạt CPM / CPE / CPV trung bình ra sao?</div>
-    <div class="chart-wrap tall"><canvas id="chartPostFormat"></canvas></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái). 3 đường = đơn giá trung bình của định dạng (trục phải): <b>CPM</b> (chi phí/1.000 hiển thị) &amp; <b>CPE</b> (chi phí/lượt tương tác) cho mọi định dạng; <b>CPV</b> (chi phí/lượt xem) chỉ Video vì chỉ video có lượt xem.</div>
   </div>
 
   <div class="tabs" id="postTabs"></div>
@@ -1817,11 +1822,47 @@ function renderBudget() {
     }
   });
 
-  // ---- Spend by Content Format (pie) ----
+  // ---- Spend by Content Format (pie) + CPM trung bình theo định dạng ----
   const formatSpend = {};
-  data.forEach(r => { const f = POST_FORMAT[r[2]] || 'Khác'; formatSpend[f] = (formatSpend[f]||0) + r[7]; });
-  const fmtKeys = Object.keys(formatSpend).sort((a,b)=>formatSpend[b]-formatSpend[a]);
-  mkPie('chartFormat', fmtKeys, fmtKeys.map(k=>formatSpend[k]), fmtKeys.map((_,i)=>PIE_PAL[i%PIE_PAL.length]));
+  const formatImpr  = {};
+  data.forEach(r => {
+    const f = POST_FORMAT[r[2]] || 'Khác';
+    formatSpend[f] = (formatSpend[f]||0) + r[7];
+    formatImpr[f]  = (formatImpr[f]||0)  + r[8];
+  });
+  const fmtKeys   = Object.keys(formatSpend).sort((a,b)=>formatSpend[b]-formatSpend[a]);
+  const fmtColors = fmtKeys.map((_,i)=>PIE_PAL[i%PIE_PAL.length]);
+  const fmtCpm    = {};
+  fmtKeys.forEach(f => { fmtCpm[f] = formatImpr[f] ? formatSpend[f]/formatImpr[f]*1000 : 0; });
+  (function(){
+    const ctx = document.getElementById('chartFormat');
+    if (!ctx) return;
+    destroy('chartFormat');
+    const vals = fmtKeys.map(k=>formatSpend[k]);
+    const tot  = vals.reduce((a,b)=>a+b,0);
+    charts.chartFormat = new Chart(ctx, {
+      type:'pie',
+      data:{ labels: fmtKeys, datasets:[{ data: vals, backgroundColor: fmtColors, borderColor:'#fff', borderWidth:3 }] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{ position:'bottom', labels:{ font:{size:12}, padding:12, boxWidth:13 } },
+          tooltip:{ callbacks:{ label: c => {
+            const pct = tot ? (c.parsed/tot*100).toFixed(1).replace('.', ',') : '0';
+            return [ c.label + ': ' + fmtVND(c.parsed) + ' (' + pct + '%)',
+                     'CPM TB: ' + fmtVND(fmtCpm[c.label] || 0) ];
+          }}}
+        }
+      }
+    });
+  })();
+  // CPM tags dưới pie — để dễ xem & so sánh CPM giữa các định dạng
+  const fmtNote = document.getElementById('formatCpmNote');
+  if (fmtNote) {
+    fmtNote.innerHTML = fmtKeys.map((f,i) =>
+      `<span class="cpm-tag"><i style="background:${fmtColors[i]}"></i>${f} <span class="cpm-lab">· CPM</span> <b>${fmtVND(fmtCpm[f])}</b></span>`
+    ).join('');
+  }
 
   // ---- Spend by Content Pillar (pie) ----
   const pillarSpend = {};
@@ -2806,57 +2847,6 @@ function renderDailyCost() {
   });
 }
 
-// ==================== ORCHESTRATOR ====================
-// ==================== BY POST: format distribution + avg CPM ====================
-function renderPostFormat() {
-  const cv = document.getElementById('chartPostFormat');
-  if (!cv) return;
-  const data = filterData();
-
-  // blended per-format aggregate (gộp tất cả mục tiêu trong mỗi định dạng)
-  const agg = {};
-  data.forEach(r => {
-    const f = POST_FORMAT[r[2]] || 'Khác';
-    agg[f] = agg[f] || { cost:0, impression:0, engagement:0, thruplay:0, link_click:0 };
-    const a = agg[f];
-    a.cost += r[7]; a.impression += r[8]; a.engagement += r[10]; a.thruplay += r[11]; a.link_click += (r[13] || 0);
-  });
-  const fmtKeys = Object.keys(agg).sort((x,y)=>agg[y].cost-agg[x].cost);
-
-  const spendVals = fmtKeys.map(f => agg[f].cost);
-  const cpmVals = fmtKeys.map(f => { const a=agg[f]; return a.impression ? a.cost/a.impression*1000 : null; });
-  const cpeVals = fmtKeys.map(f => { const a=agg[f]; return a.engagement > 0 ? a.cost/a.engagement : null; });
-  // CPV chỉ tính cho định dạng thực sự có lượt xem video (thruplay đáng kể) → loại ảnh
-  const cpvVals = fmtKeys.map(f => { const a=agg[f]; return (a.impression && a.thruplay/a.impression >= 0.01) ? a.cost/a.thruplay : null; });
-
-  const lineCommon = { borderWidth:3, pointRadius:5, pointHoverRadius:7, pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.25, spanGaps:false, yAxisID:'y1', order:1 };
-
-  destroy('chartPostFormat');
-  charts.chartPostFormat = new Chart(cv, {
-    data: {
-      labels: fmtKeys,
-      datasets: [
-        { type:'bar', label:'Chi tiêu', data: spendVals, backgroundColor: C.green, borderRadius:6, maxBarThickness:72, yAxisID:'y', order:4 },
-        { type:'line', label:'CPM TB', data: cpmVals, borderColor:'#1F8857', backgroundColor:'#1F8857', pointBackgroundColor:'#1F8857', ...lineCommon },
-        { type:'line', label:'CPE TB', data: cpeVals, borderColor:'#FF8A4C', backgroundColor:'#FF8A4C', pointBackgroundColor:'#FF8A4C', ...lineCommon },
-        { type:'line', label:'CPV TB', data: cpvVals, borderColor:'#2563EB', backgroundColor:'#2563EB', pointBackgroundColor:'#2563EB', ...lineCommon }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{ position:'top' },
-        tooltip:{ callbacks:{ label: c => { if (c.parsed.y == null) return undefined; return c.dataset.label + ': ' + fmtVND(c.parsed.y); } } }
-      },
-      scales:{
-        x:{ ticks:{ font:{size:11} } },
-        y:{ beginAtZero:true, position:'left', ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'Chi tiêu', color:'#5C7060', font:{size:10}} },
-        y1:{ beginAtZero:true, position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:v=>fmt(v)+'đ' }, title:{display:true, text:'Đơn giá TB (CPM/CPE/CPV)', color:'#5C7060', font:{size:10}} }
-      }
-    }
-  });
-}
-
 // ==================== MOBILE: stamp data-label on table cells for card layout ====================
 function stampTableLabels() {
   document.querySelectorAll('.table-wrap table').forEach(tbl => {
@@ -2874,7 +2864,6 @@ function renderAll() {
   renderOverview();
   renderBudget();
   renderPost();
-  renderPostFormat();
   renderAudience();
   renderDaily();
   renderDailyCost();
