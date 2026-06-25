@@ -881,6 +881,18 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
 .pa .pa-tt { font-weight: 800; color: var(--brand-900); white-space: nowrap; }
 .pa .pill { margin-top: 1px; }
 
+/* ====== Section 1: expandable objective rows → per-post detail ====== */
+.obj-row { cursor: pointer; }
+.obj-row:hover td { background: rgba(13,61,45,0.04); }
+.caret, .caret-spacer { display: inline-block; width: 13px; margin-right: 5px; color: var(--brand-700); font-size: 10px; transition: transform 0.15s ease; vertical-align: 1px; }
+.obj-row.open .caret { transform: rotate(90deg); }
+tr.detail-row td { background: var(--bg-surface); font-size: 11px; padding-top: 6px; padding-bottom: 6px; color: var(--text-soft); }
+tr.detail-row td:first-child { border-left: 3px solid var(--brand-100); padding-left: 18px; }
+tr.detail-row .detail-name .pcode { font-weight: 700; color: var(--brand-900); }
+tr.detail-row .detail-name .ptitle { display: block; font-size: 10px; font-weight: 400; color: var(--text-soft); margin-top: 1px; }
+tr.detail-row .num.own { font-weight: 700; color: var(--brand-900); }
+tr.detail-row .share { font-weight: 600; color: var(--text-soft); }
+
 /* ============ MOBILE: stack tables into cards (no horizontal scroll) ============ */
 @media (max-width: 640px) {
   .table-wrap { overflow-x: visible; }
@@ -1651,6 +1663,13 @@ function renderOverview() {
     return `<div class="pa"><span class="pa-kh">KH ${fmtFn(plan)}</span><span class="pa-tt">${fmtFn(actual)}</span><span class="pill ${costCls(pc)}">${pc.toFixed(0)}%</span></div>`;
   };
 
+  // per-post unit-cost cell: actual value + vs-plan pill (lower is better)
+  const uc = (actual, plan) => {
+    if (!actual || !plan) return na;
+    const pcv = actual / plan * 100;
+    return `<div class="pa"><span class="pa-tt">${fmtC(actual)}</span><span class="pill ${costCls(pcv)}">${pcv.toFixed(0)}%</span></div>`;
+  };
+
   const sumRows = objSummaries.map(s => {
     const m = s.m, k = s.kpi, own = s.o, ownMetric = objMetric(own);
     const budgetPct = k.budget ? s.spend / k.budget * 100 : 0;
@@ -1669,8 +1688,46 @@ function renderOverview() {
     const cpvCell = (own === 'VIEW' || own === 'THRUPLAY') ? paCost(k.unit_cost, (m.thruplay ? m.cost / m.thruplay : 0), fmtC) : na;
     const cpcCell = own === 'TRAFFIC'    ? paCost(k.unit_cost,        (m.link_click ? m.cost / m.link_click : 0),        fmtC) : na;
     const pillClass = own === 'REACH' ? 'rch' : own === 'ENGAGEMENT' ? 'eng' : 'vw';
-    return `<tr>
-      <td class="bold" data-label="Objective"><span class="pill ${pillClass}">${s.label}</span></td>
+
+    // ----- per-post detail rows (same columns; actual values, no KH/plan split) -----
+    const objData = data.filter(r => r[1] === own);
+    const byPostObj = sumBy(objData, 2);
+    const postsObj = Object.keys(byPostObj).filter(p => p).sort((a, b) => byPostObj[b].cost - byPostObj[a].cost);
+    const hasPosts = postsObj.length > 0;
+    const detailRows = postsObj.map(p => {
+      const pm = byPostObj[p];
+      const pAuds = [...new Set(objData.filter(r => r[2] === p).map(r => r[3]))];
+      const pPool = pAuds.reduce((sum, a) => sum + (POOL_SIZE[a] || 0), 0);
+      const pFreq = (pm.impression > 0 && pm.reach > 0) ? (pm.impression / pm.reach).toFixed(2).replace('.', ',') : na;
+      const pClick = (pm.link_click || pm.click || 0);
+      const pShare = s.spend ? (pm.cost / s.spend * 100) : 0;
+      const oc = met => ownMetric === met ? ' own' : '';
+      const dCpm = own === 'REACH'      ? uc(pm.impression ? pm.cost / pm.impression * 1000 : 0, k.unit_cost * 1000) : na;
+      const dCpe = own === 'ENGAGEMENT' ? uc(pm.engagement ? pm.cost / pm.engagement : 0, k.unit_cost) : na;
+      const dCpv = (own === 'VIEW' || own === 'THRUPLAY') ? uc(pm.thruplay ? pm.cost / pm.thruplay : 0, k.unit_cost) : na;
+      const dCpc = own === 'TRAFFIC'    ? uc(pm.link_click ? pm.cost / pm.link_click : 0, k.unit_cost) : na;
+      const title = (POST_TITLES[p] || '').replace(/</g, '&lt;');
+      return `<tr class="detail-row" data-parent="${own}" style="display:none">
+        <td class="detail-name" data-label="Objective"><span class="pcode">${p}</span><span class="ptitle">${title}</span></td>
+        <td class="num" data-label="Pool Size">${pPool ? fmt(pPool) : na}</td>
+        <td class="num" data-label="Budget (KH→TT)">${fmtVND(pm.cost)}</td>
+        <td class="num" data-label="% Budget"><span class="share">${pShare.toFixed(0)}%</span></td>
+        <td class="num${oc('impression')}" data-label="Impression">${fmt(pm.impression)}</td>
+        <td class="num" data-label="Reach">${fmt(pm.reach)}</td>
+        <td class="num" data-label="Frequency">${pFreq}</td>
+        <td class="num${oc('engagement')}" data-label="Engagement">${fmt(pm.engagement)}</td>
+        <td class="num${oc('thruplay')}" data-label="Thruplay">${fmt(pm.thruplay)}</td>
+        <td class="num${oc('link_click')}" data-label="Click">${fmt(pClick)}</td>
+        <td class="num" data-label="CPM">${dCpm}</td>
+        <td class="num" data-label="CPE">${dCpe}</td>
+        <td class="num" data-label="CPV">${dCpv}</td>
+        <td class="num" data-label="CPC">${dCpc}</td>
+      </tr>`;
+    }).join('');
+
+    const caret = hasPosts ? '<span class="caret">▸</span>' : '<span class="caret-spacer"></span>';
+    return `<tr class="${hasPosts ? 'obj-row' : ''}"${hasPosts ? ` data-obj="${own}"` : ''}>
+      <td class="bold" data-label="Objective">${caret}<span class="pill ${pillClass}">${s.label}</span></td>
       <td class="num" data-label="Pool Size">${fmt(totalPool)}</td>
       <td class="num" data-label="Budget (KH→TT)"><div class="pa"><span class="pa-kh">KH ${fmtVND(k.budget)}</span><span class="pa-tt">${fmtVND(s.spend)}</span></div></td>
       <td class="num" data-label="% Budget"><span class="pill ${budgetCls}">${budgetPct.toFixed(0)}%</span></td>
@@ -1684,7 +1741,7 @@ function renderOverview() {
       <td class="num" data-label="CPE">${cpeCell}</td>
       <td class="num" data-label="CPV">${cpvCell}</td>
       <td class="num" data-label="CPC">${cpcCell}</td>
-    </tr>`;
+    </tr>` + detailRows;
   }).join('');
 
   // Grand total row — summed actuals for every delivery column
@@ -1710,6 +1767,21 @@ function renderOverview() {
     <td class="num" data-label="CPC">${na}</td>
   </tr>`;
   document.querySelector('#tableOverviewSummary tbody').innerHTML = sumRows + grandRow;
+
+  // Expand/collapse: clicking an objective row toggles its per-post detail rows
+  const ovBody = document.querySelector('#tableOverviewSummary tbody');
+  if (ovBody && !ovBody.dataset.toggleBound) {
+    ovBody.dataset.toggleBound = '1';
+    ovBody.addEventListener('click', function (e) {
+      const row = e.target.closest('tr.obj-row');
+      if (!row || !ovBody.contains(row)) return;
+      const obj = row.getAttribute('data-obj');
+      const isOpen = row.classList.toggle('open');
+      ovBody.querySelectorAll('tr.detail-row[data-parent="' + obj + '"]').forEach(function (d) {
+        d.style.display = isOpen ? '' : 'none';
+      });
+    });
+  }
 
   // ============= STRATEGIC INSIGHTS (no number repeating) =============
   const obj_lookup = Object.fromEntries(objSummaries.map(s=>[s.o,s]));
