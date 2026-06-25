@@ -862,78 +862,13 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
 .footer { text-align: center; color: var(--text-muted); font-size: 12px; padding: 28px 0 8px; font-weight: 500; }
 .footer .pmax { font-weight: 800; color: var(--brand-700); }
 
-/* ============ ACCESS GATE ============ */
-.access-gate {
-  position: fixed; inset: 0; z-index: 9999;
-  background: linear-gradient(155deg, #082B20 0%, #0D3D2D 55%, #145F40 140%);
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px; transition: opacity .45s ease, visibility .45s ease;
-}
-.access-gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-.access-card {
-  width: 100%; max-width: 420px; background: rgba(251,247,236,0.04);
-  border: 1px solid rgba(198,255,110,0.25); border-radius: var(--r-xl);
-  padding: 38px 32px 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.40);
-  backdrop-filter: blur(6px); text-align: center;
-}
-.access-logo {
-  display: inline-block; font-weight: 800; font-size: 13px; letter-spacing: 0.14em;
-  color: #051912; background: var(--lime-500); padding: 7px 16px; border-radius: var(--r-pill);
-  margin-bottom: 22px;
-}
-.access-card h2 { font-family: 'Plus Jakarta Sans', sans-serif; color: #FFFFFF; font-size: 21px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.01em; }
-.access-card p { color: rgba(213,240,223,0.78); font-size: 13px; line-height: 1.55; margin: 0 0 24px; }
-.access-input {
-  width: 100%; box-sizing: border-box; padding: 14px 16px; font-size: 15px; font-weight: 600;
-  border-radius: var(--r-md); border: 1.5px solid rgba(198,255,110,0.30);
-  background: rgba(5,25,18,0.55); color: #FFFFFF; outline: none; text-align: center;
-  letter-spacing: 0.04em; transition: border-color .2s, box-shadow .2s;
-}
-.access-input::placeholder { color: rgba(213,240,223,0.45); font-weight: 500; letter-spacing: normal; }
-.access-input:focus { border-color: var(--lime-500); box-shadow: 0 0 0 4px rgba(198,255,110,0.16); }
-.access-btn {
-  width: 100%; margin-top: 14px; padding: 14px 16px; font-size: 15px; font-weight: 800;
-  border: none; border-radius: var(--r-md); cursor: pointer; letter-spacing: 0.02em;
-  color: #051912; background: var(--lime-500); transition: transform .12s, box-shadow .2s, background .2s;
-}
-.access-btn:hover { background: var(--lime-400); box-shadow: 0 8px 22px rgba(198,255,110,0.28); }
-.access-btn:active { transform: translateY(1px); }
-.access-error {
-  color: #FFB4A6; font-size: 12.5px; font-weight: 600; margin-top: 13px; min-height: 16px;
-  opacity: 0; transition: opacity .2s;
-}
-.access-error.show { opacity: 1; }
-.access-hint { color: rgba(213,240,223,0.45); font-size: 11px; margin-top: 20px; line-height: 1.5; }
 
-/* ============ ACCOUNT SUMMARY (aggregate of all ads) ============ */
-.acct-panel {
-  background: linear-gradient(150deg, var(--brand-900) 0%, var(--brand-800) 100%);
-  border-radius: var(--r-lg); padding: 22px 24px 24px; margin-bottom: 22px;
-  border: 1px solid var(--brand-700); box-shadow: var(--shadow-md);
-}
-.acct-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-.acct-head .acct-title { font-family: 'Plus Jakarta Sans', sans-serif; color: #FFFFFF; font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
-.acct-head .acct-badge { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #051912; background: var(--lime-500); padding: 3px 9px; border-radius: var(--r-pill); }
-.acct-sub { color: rgba(213,240,223,0.72); font-size: 11.5px; line-height: 1.5; margin-bottom: 16px; max-width: 760px; }
-.acct-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
-.acct-tile { background: rgba(251,247,236,0.06); border: 1px solid rgba(198,255,110,0.14); border-radius: var(--r-md); padding: 13px 14px; }
-.acct-tile.span2 { grid-column: span 2; }
-.acct-tile .t-label { color: rgba(213,240,223,0.62); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.acct-tile .t-value { color: #FFFFFF; font-size: 19px; font-weight: 800; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.acct-tile .t-value .t-unit { font-size: 11px; font-weight: 600; color: rgba(213,240,223,0.6); margin-left: 3px; }
-.acct-tile .t-meta { color: var(--lime-500); font-size: 10.5px; font-weight: 600; margin-top: 3px; }
-.acct-tile .t-meta.muted { color: rgba(213,240,223,0.5); }
-.acct-uc-title { color: rgba(213,240,223,0.85); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 4px 0 9px; }
-.acct-uc-table { width: 100%; border-collapse: collapse; }
-.acct-uc-table th { text-align: left; color: var(--lime-500); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 10px; border-bottom: 1px solid rgba(198,255,110,0.22); }
-.acct-uc-table th.num, .acct-uc-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.acct-uc-table td { color: #EAF4ED; font-size: 13px; padding: 9px 10px; border-bottom: 1px solid rgba(198,255,110,0.08); }
-.acct-uc-table tr:last-child td { border-bottom: none; }
-.acct-uc-table td.metric { font-weight: 700; color: #FFFFFF; }
-.acct-uc-pill { display: inline-block; padding: 2px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; }
-.acct-uc-pill.good { color: #051912; background: var(--lime-500); }
-.acct-uc-pill.bad { color: #FFFFFF; background: #B91C1C; }
-.acct-uc-note { color: rgba(213,240,223,0.55); font-size: 10.5px; line-height: 1.5; margin-top: 11px; }
+
+/* ============ Plan-vs-Actual stacked cell (summary table) ============ */
+.pa { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 1px; line-height: 1.25; }
+.pa .pa-kh { font-size: 10px; color: var(--text-soft); font-weight: 600; white-space: nowrap; }
+.pa .pa-tt { font-weight: 800; color: var(--brand-900); white-space: nowrap; }
+.pa .pill { margin-top: 1px; }
 
 /* ============ MOBILE: stack tables into cards (no horizontal scroll) ============ */
 @media (max-width: 640px) {
@@ -957,26 +892,10 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
     color: var(--text-muted); white-space: normal;
   }
   .table-wrap td:empty { display: none; }
-  /* account summary tiles: 2 columns on mobile */
-  .acct-tiles { grid-template-columns: repeat(2, 1fr); }
-  .acct-panel { padding: 18px 16px 20px; }
 }
 </style>
 </head>
 <body>
-
-<!-- ===== ACCESS GATE ===== -->
-<div class="access-gate" id="accessGate">
-  <div class="access-card">
-    <div class="access-logo">VCB × PMAX</div>
-    <h2>Báo cáo hiệu suất</h2>
-    <p>Vui lòng nhập mã truy cập để xem báo cáo chiến dịch.</p>
-    <input type="password" class="access-input" id="accessInput" placeholder="Nhập mã truy cập" autocomplete="off" spellcheck="false">
-    <button class="access-btn" id="accessBtn">Truy cập báo cáo</button>
-    <div class="access-error" id="accessError">Mã truy cập không đúng. Vui lòng thử lại.</div>
-    <div class="access-hint">Liên hệ team PMAX nếu bạn chưa có mã truy cập.</div>
-  </div>
-</div>
 
 <div class="container">
 
@@ -1016,24 +935,24 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
     <div class="section-desc">Tổng quan chiến dịch: chi tiêu, KPI và đơn giá thực tế so với kế hoạch theo từng mục tiêu.</div>
   </div>
 
-  <div id="accountSummary"></div>
-
   <div class="kpi-grid" id="kpiGrid"></div>
 
   <div class="table-title">Summary · Plan vs Actual <span style="font-weight:400;font-size:11px;color:var(--text-soft);margin-left:8px;">(CPM = Reach · CPE = Engagement · CPV = Thruplay · CPC = Traffic)</span></div>
   <div class="table-wrap"><table id="tableOverviewSummary"><thead><tr>
     <th>Objective</th>
     <th class="num" title="Tổng quy mô tệp khán giả có thể tiếp cận">Pool Size</th>
-    <th class="num">Budget Plan</th>
-    <th class="num">Budget Actual</th>
+    <th class="num" title="Ngân sách: Kế hoạch (KH) so với Thực tế (TT)">Budget (KH→TT)</th>
     <th class="num">% Budget</th>
-    <th class="num">Qty Plan</th>
-    <th class="num">Qty Actual</th>
-    <th class="num">% Qty</th>
-    <th class="num" title="Frequency = Impression / Unique Reach (only for Reach)">Frequency</th>
-    <th class="num">UC Plan</th>
-    <th class="num">UC Actual</th>
-    <th class="num">% UC</th>
+    <th class="num" title="Lượt hiển thị — chỉ tiêu chính của nhóm Reach (KH vs TT)">Impression</th>
+    <th class="num" title="Người tiếp cận (đã loại trùng trong từng dòng)">Reach</th>
+    <th class="num" title="Tần suất = Impression / Reach">Frequency</th>
+    <th class="num" title="Lượt tương tác — chỉ tiêu chính của nhóm Engagement (KH vs TT)">Engagement</th>
+    <th class="num" title="Lượt xem video (Thruplay) — chỉ tiêu chính của nhóm Video/Thruplay (KH vs TT)">Thruplay</th>
+    <th class="num" title="Lượt click / link click — chỉ tiêu chính của nhóm Traffic (KH vs TT)">Click</th>
+    <th class="num" title="Chi phí / 1.000 impression — KH vs TT (chỉ tính cho nhóm Reach)">CPM</th>
+    <th class="num" title="Chi phí / lượt tương tác — KH vs TT (chỉ tính cho nhóm Engagement)">CPE</th>
+    <th class="num" title="Chi phí / lượt xem video — KH vs TT (chỉ tính cho nhóm Video/Thruplay)">CPV</th>
+    <th class="num" title="Chi phí / link click — KH vs TT (chỉ tính cho nhóm Traffic)">CPC</th>
   </tr></thead><tbody></tbody></table></div>
 
   <div class="insight-box">
@@ -1100,9 +1019,9 @@ table td.bold { font-weight: 700; color: var(--brand-900); }
 
   <div class="chart-block">
     <div class="chart-title">Phân bổ theo Định dạng &amp; Đơn giá hiệu quả trung bình</div>
-    <div class="chart-question">Mỗi định dạng nhận bao nhiêu ngân sách, và đạt CPM / CPE / CPV trung bình ra sao? Có thể bấm vào chỉ số để loại trừ bớt.</div>
+    <div class="chart-question">Mỗi định dạng nhận bao nhiêu ngân sách, và đạt CPM / CPE / CPV trung bình ra sao?</div>
     <div class="chart-wrap tall"><canvas id="chartPostFormat"></canvas></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu cả 3 mục tiêu chia theo định dạng (trục trái). 3 đường = đơn giá trung bình của định dạng (trục phải): <b>CPM</b> (chi phí/1.000 hiển thị) &amp; <b>CPE</b> (chi phí/lượt tương tác) cho mọi định dạng; <b>CPV</b> (chi phí/lượt xem) chỉ Video vì chỉ video có lượt xem.</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-soft)">Cột = tổng chi tiêu theo định dạng (trục trái). 3 đường = đơn giá trung bình của định dạng (trục phải): <b>CPM</b> (chi phí/1.000 hiển thị) &amp; <b>CPE</b> (chi phí/lượt tương tác) cho mọi định dạng; <b>CPV</b> (chi phí/lượt xem) chỉ Video vì chỉ video có lượt xem.</div>
   </div>
 
   <div class="tabs" id="postTabs"></div>
@@ -1712,59 +1631,78 @@ function renderOverview() {
   // Bảng tổng hợp — Kế hoạch vs Thực tế for ngân sách + qty + unit cost
   // Helper: total pool size of audiences (sum over all CFG.pool_size values)
   const totalPool = Object.values(CFG.pool_size || {}).reduce((a,b)=>a+b, 0);
-  // Helper: unit cost label per objective
-  const ucLabel = o => o==='REACH'?'CPM':(o==='ENGAGEMENT'?'CPE':(o==='TRAFFIC'?'CPC':'CPV'));
+  const na = '—';
+  const fmtC = v => fmt(v) + ' đ';
+  // cost %: lower is better; volume/budget %: handled by clsHi (higher better)
+  const costCls = pc => pc <= 100 ? 'good' : (pc <= 115 ? 'warn' : 'bad');
+  // plan-vs-actual cell (volume metric — owning objective only)
+  const paVol = (plan, actual, fmtFn) => {
+    const pc = plan ? actual / plan * 100 : 0;
+    return `<div class="pa"><span class="pa-kh">KH ${fmtFn(plan)}</span><span class="pa-tt">${fmtFn(actual)}</span><span class="pill ${clsHi(Math.min(pc,200))}">${pc.toFixed(0)}%</span></div>`;
+  };
+  // plan-vs-actual cell (unit cost — owning objective only)
+  const paCost = (plan, actual, fmtFn) => {
+    const pc = plan ? actual / plan * 100 : 0;
+    return `<div class="pa"><span class="pa-kh">KH ${fmtFn(plan)}</span><span class="pa-tt">${fmtFn(actual)}</span><span class="pill ${costCls(pc)}">${pc.toFixed(0)}%</span></div>`;
+  };
+
   const sumRows = objSummaries.map(s => {
-    const budgetPct = s.kpi.budget ? s.spend/s.kpi.budget*100 : 0;
-    const ucPct = s.kpi.unit_cost ? s.actualUnitCost/s.kpi.unit_cost*100 : 0;
-    const ucPlan = s.kpi.unit_cost;
-    const ucName = ucLabel(s.o);
-    // For REACH, unit_cost is per-impression — display ×1000 to convert to CPM (cost per 1.000 impressions)
-    const planUcVal = s.o === 'REACH' ? ucPlan*1000 : ucPlan;
-    const actualUcVal = s.o === 'REACH' ? s.actualUnitCost*1000 : s.actualUnitCost;
-    const planUcDisp = `<b>${ucName}</b> ${fmt(planUcVal)}đ`;
-    const actualUcDisp = `<b>${ucName}</b> ${fmt(actualUcVal)}đ`;
-    // Frequency = impression / unique reach (only REACH has it)
-    let freqDisp = '—';
-    if (s.o === 'REACH' && s.m.reach > 0) {
-      const freq = s.m.impression / s.m.reach;
-      freqDisp = freq.toFixed(2).replace('.', ',');
-    }
-    // Color coding: ngân sách overrun = warn; unit cost overrun = bad
+    const m = s.m, k = s.kpi, own = s.o, ownMetric = objMetric(own);
+    const budgetPct = k.budget ? s.spend / k.budget * 100 : 0;
     const budgetCls = budgetPct <= 100 ? 'good' : (budgetPct <= 110 ? 'warn' : 'bad');
-    const qtyCls = s.pct >= 95 ? 'good' : (s.pct >= 80 ? 'warn' : 'bad');
-    const ucCls = ucPct <= 100 ? 'good' : 'bad';
+    const freq = (m.impression > 0 && m.reach > 0) ? (m.impression / m.reach) : 0;
+    const freqDisp = freq ? freq.toFixed(2).replace('.', ',') : na;
+    const clickActual = (m.link_click || m.click || 0);
+    // volume cells — owning objective shows KH/TT/%, others show actual only
+    const impCell   = ownMetric === 'impression' ? paVol(k.qty, m.impression, fmt) : fmt(m.impression);
+    const engCell   = ownMetric === 'engagement' ? paVol(k.qty, m.engagement, fmt) : fmt(m.engagement);
+    const thruCell  = ownMetric === 'thruplay'   ? paVol(k.qty, m.thruplay,   fmt) : fmt(m.thruplay);
+    const clickCell = ownMetric === 'link_click' ? paVol(k.qty, m.link_click, fmt) : fmt(clickActual);
+    // unit cost cells — only for the objective that owns that unit cost
+    const cpmCell = own === 'REACH'      ? paCost(k.unit_cost * 1000, (m.impression ? m.cost / m.impression * 1000 : 0), fmtC) : na;
+    const cpeCell = own === 'ENGAGEMENT' ? paCost(k.unit_cost,        (m.engagement ? m.cost / m.engagement : 0),        fmtC) : na;
+    const cpvCell = (own === 'VIEW' || own === 'THRUPLAY') ? paCost(k.unit_cost, (m.thruplay ? m.cost / m.thruplay : 0), fmtC) : na;
+    const cpcCell = own === 'TRAFFIC'    ? paCost(k.unit_cost,        (m.link_click ? m.cost / m.link_click : 0),        fmtC) : na;
+    const pillClass = own === 'REACH' ? 'rch' : own === 'ENGAGEMENT' ? 'eng' : 'vw';
     return `<tr>
-      <td class="bold"><span class="pill ${s.o==='REACH'?'rch':s.o==='ENGAGEMENT'?'eng':'vw'}">${s.label}</span></td>
-      <td class="num">${fmt(totalPool)}</td>
-      <td class="num">${fmtVND(s.kpi.budget)}</td>
-      <td class="num bold">${fmtVND(s.spend)}</td>
-      <td class="num"><span class="pill ${budgetCls}">${budgetPct.toFixed(0)}%</span></td>
-      <td class="num">${fmt(s.kpi.qty)}</td>
-      <td class="num bold">${fmt(s.qty)}</td>
-      <td class="num"><span class="pill ${qtyCls}">${s.pct.toFixed(0)}%</span></td>
-      <td class="num">${freqDisp}</td>
-      <td class="num">${planUcDisp}</td>
-      <td class="num bold">${actualUcDisp}</td>
-      <td class="num"><span class="pill ${ucCls}">${ucPct.toFixed(0)}%</span></td>
+      <td class="bold" data-label="Objective"><span class="pill ${pillClass}">${s.label}</span></td>
+      <td class="num" data-label="Pool Size">${fmt(totalPool)}</td>
+      <td class="num" data-label="Budget (KH→TT)"><div class="pa"><span class="pa-kh">KH ${fmtVND(k.budget)}</span><span class="pa-tt">${fmtVND(s.spend)}</span></div></td>
+      <td class="num" data-label="% Budget"><span class="pill ${budgetCls}">${budgetPct.toFixed(0)}%</span></td>
+      <td class="num" data-label="Impression">${impCell}</td>
+      <td class="num" data-label="Reach">${fmt(m.reach)}</td>
+      <td class="num" data-label="Frequency">${freqDisp}</td>
+      <td class="num" data-label="Engagement">${engCell}</td>
+      <td class="num" data-label="Thruplay">${thruCell}</td>
+      <td class="num" data-label="Click">${clickCell}</td>
+      <td class="num" data-label="CPM">${cpmCell}</td>
+      <td class="num" data-label="CPE">${cpeCell}</td>
+      <td class="num" data-label="CPV">${cpvCell}</td>
+      <td class="num" data-label="CPC">${cpcCell}</td>
     </tr>`;
   }).join('');
-  // Grand total row
-  let totPlanQty=0, totActQty=0;
-  objSummaries.forEach(s => { totPlanQty += s.kpi.qty; totActQty += s.qty; });
-  const grandBudgetPct = total.cost/KPI_TOTAL_BUDGET*100;
-  const grandQtyPct = totPlanQty ? totActQty/totPlanQty*100 : 0;
+
+  // Grand total row — summed actuals for every delivery column
+  const tImp = total.impression, tReach = total.reach, tEng = total.engagement,
+        tThru = total.thruplay, tClick = (total.link_click || total.click || 0);
+  const grandBudgetPct = KPI_TOTAL_BUDGET ? total.cost / KPI_TOTAL_BUDGET * 100 : 0;
+  const grandBudgetCls = grandBudgetPct <= 100 ? 'good' : (grandBudgetPct <= 110 ? 'warn' : 'bad');
+  const grandFreq = tReach > 0 ? (tImp / tReach).toFixed(2).replace('.', ',') : na;
   const grandRow = `<tr style="background:rgba(13,61,45,0.06);border-top:2px solid var(--brand-700);">
-    <td class="bold" style="color:var(--brand-900);">GRAND TOTAL</td>
-    <td class="num bold">${fmt(totalPool)}</td>
-    <td class="num bold">${fmtVND(KPI_TOTAL_BUDGET)}</td>
-    <td class="num bold" style="color:var(--brand-900);">${fmtVND(total.cost)}</td>
-    <td class="num"><span class="pill ${grandBudgetPct<=100?'good':'bad'}">${grandBudgetPct.toFixed(0)}%</span></td>
-    <td class="num bold">${fmt(totPlanQty)}</td>
-    <td class="num bold" style="color:var(--brand-900);">${fmt(totActQty)}</td>
-    <td class="num"><span class="pill ${grandQtyPct>=95?'good':'bad'}">${grandQtyPct.toFixed(0)}%</span></td>
-    <td class="num">—</td>
-    <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+    <td class="bold" data-label="Objective" style="color:var(--brand-900);">GRAND TOTAL</td>
+    <td class="num bold" data-label="Pool Size">${fmt(totalPool)}</td>
+    <td class="num" data-label="Budget (KH→TT)"><div class="pa"><span class="pa-kh">KH ${fmtVND(KPI_TOTAL_BUDGET)}</span><span class="pa-tt" style="color:var(--brand-900);">${fmtVND(total.cost)}</span></div></td>
+    <td class="num" data-label="% Budget"><span class="pill ${grandBudgetCls}">${grandBudgetPct.toFixed(0)}%</span></td>
+    <td class="num bold" data-label="Impression" style="color:var(--brand-900);">${fmt(tImp)}</td>
+    <td class="num bold" data-label="Reach" style="color:var(--brand-900);">${fmt(tReach)}</td>
+    <td class="num bold" data-label="Frequency">${grandFreq}</td>
+    <td class="num bold" data-label="Engagement" style="color:var(--brand-900);">${fmt(tEng)}</td>
+    <td class="num bold" data-label="Thruplay" style="color:var(--brand-900);">${fmt(tThru)}</td>
+    <td class="num bold" data-label="Click" style="color:var(--brand-900);">${fmt(tClick)}</td>
+    <td class="num" data-label="CPM">${na}</td>
+    <td class="num" data-label="CPE">${na}</td>
+    <td class="num" data-label="CPV">${na}</td>
+    <td class="num" data-label="CPC">${na}</td>
   </tr>`;
   document.querySelector('#tableOverviewSummary tbody').innerHTML = sumRows + grandRow;
 
@@ -2869,40 +2807,6 @@ function renderDailyCost() {
 }
 
 // ==================== ORCHESTRATOR ====================
-// ==================== ACCOUNT SUMMARY (aggregate of all ads) ====================
-function renderAccountSummary() {
-  const el = document.getElementById('accountSummary');
-  if (!el) return;
-  const data = filterData();
-  const t = totals(data);
-  const totalPool = Object.values(CFG.pool_size || {}).reduce((a,b)=>a+b, 0);
-  const freq = t.reach > 0 ? (t.impression / t.reach) : 0;
-  const spendPct = KPI_TOTAL_BUDGET ? (t.cost / KPI_TOTAL_BUDGET * 100) : 0;
-  const freqDisp = freq ? freq.toFixed(2).replace('.', ',') : '—';
-
-  const tiles = [
-    `<div class="acct-tile"><div class="t-label">Tổng chi tiêu</div><div class="t-value">${fmt(t.cost)}<span class="t-unit">đ</span></div><div class="t-meta ${spendPct<=110?'':'muted'}">KPI ${fmt(KPI_TOTAL_BUDGET)}đ · ${spendPct.toFixed(0)}%</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Impression</div><div class="t-value">${fmt(t.impression)}</div><div class="t-meta muted">gồm mọi nhóm mục tiêu</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Gross Reach</div><div class="t-value">${fmt(t.reach)}</div><div class="t-meta muted">chưa loại trùng</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Tần suất (Freq)</div><div class="t-value">${freqDisp}</div><div class="t-meta muted">Impression / Reach</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Lượt tương tác</div><div class="t-value">${fmt(t.engagement)}</div><div class="t-meta muted">gồm cả từ video & reach</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Lượt xem video</div><div class="t-value">${fmt(t.thruplay)}</div><div class="t-meta muted">Thruplay</div></div>`,
-    `<div class="acct-tile"><div class="t-label">Click</div><div class="t-value">${fmt(t.click)}</div>${t.link_click ? `<div class="t-meta muted">Link click ${fmt(t.link_click)}</div>` : ''}</div>`,
-    `<div class="acct-tile"><div class="t-label">Quy mô tập (Pool)</div><div class="t-value">${fmt(totalPool)}</div><div class="t-meta muted">tổng audience</div></div>`,
-  ].join('');
-
-  el.innerHTML = `
-    <div class="acct-panel">
-      <div class="acct-head">
-        <span class="acct-title">Tổng hợp toàn tài khoản — gộp tất cả quảng cáo</span>
-        <span class="acct-badge">All ads</span>
-      </div>
-      <div class="acct-sub">Số liệu cộng gộp của <b>toàn bộ nhóm quảng cáo</b> trong chiến dịch (giống trang tổng của Facebook Ads Manager). Các con số ở đây <b>khác với thẻ KPI bên dưới</b> vì thẻ KPI chỉ tính chỉ số chính của riêng từng mục tiêu, còn ở đây cộng gộp mọi mục tiêu — ví dụ <b>Impression</b> gồm cả impression của nhóm Engagement & Video (không chỉ nhóm Reach), và <b>Lượt tương tác</b> gồm cả tương tác phát sinh từ quảng cáo video/reach. <b>Gross Reach</b> là tổng reach cộng dồn của từng nhóm — chưa loại trùng người, nên lớn hơn reach thực của từng dòng riêng lẻ.</div>
-      <div class="acct-tiles">${tiles}</div>
-      <div class="acct-uc-note" style="margin-top:4px;border-top:1px solid rgba(198,255,110,0.14);padding-top:13px;"><b>Về đơn giá CPM / CPE / CPV / CPC:</b> xem bảng <b>"Summary — Plan vs Actual"</b> ngay bên dưới — đó là so sánh chuẩn theo từng mục tiêu (đúng chi tiêu của mục tiêu chia cho đúng chỉ số của mục tiêu đó). Không nên lấy tổng chi toàn tài khoản chia cho một chỉ số đơn lẻ vì ngân sách trải trên nhiều mục tiêu khác nhau (Reach / Engagement / Video) — làm vậy CPM/CPV sẽ bị thổi phồng sai lệch.</div>
-    </div>`;
-}
-
 // ==================== BY POST: format distribution + avg CPM ====================
 function renderPostFormat() {
   const cv = document.getElementById('chartPostFormat');
@@ -2967,7 +2871,6 @@ function stampTableLabels() {
 }
 
 function renderAll() {
-  renderAccountSummary();
   renderOverview();
   renderBudget();
   renderPost();
@@ -3225,7 +3128,21 @@ document.getElementById('upd').textContent = new Date().toLocaleDateString('vi-V
 })();
 
 // Render immediately with embedded data, then refresh from sheet in background.
-applyCampaign('mego');
+// === SINGLE-CAMPAIGN LOCK (set per published link) ===
+// null = show switcher (xem cả 2 chiến dịch) · 'mego' / 'gdhh' = khoá vào 1 chiến dịch.
+const LOCK_CAMPAIGN = null;
+(function initCampaign(){
+  const switcher = document.getElementById('campaignSwitcher');
+  if (LOCK_CAMPAIGN === 'mego' || LOCK_CAMPAIGN === 'gdhh') {
+    if (switcher) {
+      switcher.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.campaign === LOCK_CAMPAIGN));
+      switcher.style.display = 'none';
+    }
+    applyCampaign(LOCK_CAMPAIGN);
+  } else {
+    applyCampaign('mego');
+  }
+})();
 
 // Kick off background refresh for every chiến dịch that has a live_source.
 // Runs in parallel — if sheet is public, fresh data overrides embedded data + re-renders.
@@ -3235,43 +3152,6 @@ setTimeout(() => {
   });
 }, 100);
 
-// ==================== ACCESS GATE ====================
-// PLACEHOLDER codes — đổi 3 mã bên dưới thành mã riêng trước khi chia sẻ.
-// Mã 'all' = xem cả 2 chiến dịch (hiện nút chuyển) · 'mego' = khoá MeGO · 'gdhh' = khoá Gia đình HaHa.
-(function () {
-  const ACCESS = { 'all': 'all', 'mego': 'mego', 'gdhh': 'gdhh' };
-  const gate = document.getElementById('accessGate');
-  const input = document.getElementById('accessInput');
-  const btn = document.getElementById('accessBtn');
-  const err = document.getElementById('accessError');
-  const switcher = document.getElementById('campaignSwitcher');
-  if (!gate || !input || !btn) return;
-
-  function unlock(level) {
-    if (level === 'mego' || level === 'gdhh') {
-      if (switcher) {
-        switcher.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.campaign === level));
-        switcher.style.display = 'none';
-      }
-      if (typeof applyCampaign === 'function' && activeCampaign !== level) applyCampaign(level);
-    }
-    // level 'all' → giữ nút chuyển chiến dịch hiển thị
-    gate.classList.add('hidden');
-    setTimeout(() => { gate.style.display = 'none'; }, 520);
-  }
-
-  function submit() {
-    const code = (input.value || '').trim().toLowerCase();
-    const level = ACCESS[code];
-    if (level) { err.classList.remove('show'); unlock(level); }
-    else { err.classList.add('show'); input.focus(); input.select(); }
-  }
-
-  btn.addEventListener('click', submit);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
-  input.addEventListener('input', () => err.classList.remove('show'));
-  setTimeout(() => { try { input.focus(); } catch (e) {} }, 120);
-})();
 </script>
 </body>
 </html>
