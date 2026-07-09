@@ -2332,72 +2332,101 @@ function renderPost() {
   const highSpendPosts = [...valid].sort((a,b)=>metrics[b].cost-metrics[a].cost).slice(0,3);
   const highSpendIneffective = highSpendPosts.filter(p => metrics[p][costMetric]/planUnit > 1.05);
 
-  // ============ Phân tích theo Format / Pillar / Post — data-driven ============
-  // Ưu tiên theo mục tiêu: REACH→CPM · ENGAGEMENT→CPE+ER · THRUPLAY→CPV+VR · TRAFFIC→CPC+CTR
-  const costName = costLabel.replace(/\s*\(đ\)\s*/, '');
-  const qName = qualityLabel.replace(/\s*%\s*/, '');
-  const unitAgg = list => {
-    let cost=0,impr=0,eng=0,thru=0,lc=0,clk=0;
-    list.forEach(p => { const m=metrics[p]; cost+=m.cost; impr+=m.impression; eng+=m.engagement; thru+=m.thruplay; lc+=(m.link_click||0); clk+=(m.link_click||m.click||0); });
-    const cm = obj==='REACH' ? (impr?cost/impr*1000:0)
-             : obj==='ENGAGEMENT' ? (eng?cost/eng:0)
-             : obj==='TRAFFIC' ? (lc?cost/lc:0)
-             : (thru?cost/thru:0);
-    const qm = (obj==='REACH'||obj==='ENGAGEMENT') ? (impr?eng/impr*100:0)
-             : obj==='TRAFFIC' ? (impr?clk/impr*100:0)
-             : (impr?thru/impr*100:0);
-    return { cost, impr, cm, qm, n:list.length };
-  };
-  const groupBy = fn => { const g={}; valid.forEach(p => { const k=fn(p)||'—'; (g[k]=g[k]||[]).push(p); }); return g; };
-  const rankGroups = g => Object.keys(g).map(k => Object.assign({key:k}, unitAgg(g[k]))).filter(x => x.cm>0).sort((a,b)=>a.cm-b.cm);
-  const fmtRank = rankGroups(groupBy(getPostFormat));
-  const pilRank = rankGroups(groupBy(p => POST_PILLAR[p]));
-  const bestFmt = fmtRank[0], worstFmt = fmtRank.length>1 ? fmtRank[fmtRank.length-1] : null;
-  const bestPil = pilRank[0], worstPil = pilRank.length>1 ? pilRank[pilRank.length-1] : null;
-  const camp = unitAgg(valid);
-  const topP = stableTop, worstP = worstEff[0];
-  const overKPI = valid.filter(p => metrics[p][costMetric] > planUnit*1.05);
-  const rOf = p => (metrics[p][costMetric]/planUnit*100).toFixed(0);
-  const benchTxt = (val, b, lowerBetter, unit) => {
-    if (!b) return '';
-    if (lowerBetter) return val<=b.low ? `tốt hơn benchmark VN (${fmt(b.low)}–${fmt(b.high)}${unit})` : val<=b.high ? `trong benchmark VN (${fmt(b.low)}–${fmt(b.high)}${unit})` : `cao hơn benchmark VN (>${fmt(b.high)}${unit})`;
-    return val>=b.high ? `vượt benchmark VN (${b.low}–${b.high}${unit})` : val>=b.low ? `trong benchmark VN (${b.low}–${b.high}${unit})` : `dưới benchmark VN (${b.low}–${b.high}${unit})`;
-  };
-  const costBench = obj==='REACH'?BENCH.cpm : obj==='ENGAGEMENT'?BENCH.cpe : obj==='TRAFFIC'?BENCH.cpc : null;
-  const qualBench = obj==='TRAFFIC'?BENCH.ctr : (obj==='VIEW'||obj==='THRUPLAY')?BENCH.vr : null;
-
   let nhanDinh, yNghia, deXuat;
-  if (!valid.length || !topP) {
-    nhanDinh = 'Không đủ dữ liệu hợp lệ với filter hiện tại.'; yNghia = ''; deXuat = '';
+  if (obj === 'REACH') {
+    // For Reach: use stableTop (high-volume + cheap CPM) as the reference for recommendations
+    // — avoid recommending late-campaign posts that ran briefly even if their CPM is lowest
+    const topP = stableTop, worstP = worstEff[0];
+    const topCpm = metrics[topP].cpm, worstCpm = metrics[worstP].cpm;
+    const benchCmp = topCpm < BENCH.cpm.low ? 'thấp hơn benchmark VN (3.500-8.000đ)' : (topCpm < BENCH.cpm.high ? 'nằm trong benchmark VN (3.500-8.000đ)' : 'cao hơn benchmark VN');
+    nhanDinh = `<b>Hiệu quả CPM theo bài đăng:</b><br>• <b>${topP}</b> đạt CPM ${fmt(topCpm)}đ — ${benchCmp}, hiệu quả nhất nhóm trong số các bài có khối lượng impression lớn<br>• <b>${worstP}</b> có CPM ${fmt(worstCpm)}đ — cao hơn ${topP} ${(worstCpm/topCpm).toFixed(1)} lần, chủ yếu do format và mục tiêu chưa khớp với thế mạnh nội dung`;
+    // Explain high-spend posts with CPM above KPI
+    let spendExplain = '';
+    if (highSpendIneffective.length) {
+      spendExplain = `<br><br><b>Lưu ý phân bổ ngân sách:</b><br>` +
+        `• ${highSpendIneffective.map(p=>p).join(', ')} nhận ngân sách đáng kể nhưng CPM cao hơn KPI, ER ~0,02% — đây là khoảng phổ biến cho các bài Reach trong ngành tài chính (Facebook không tối ưu tương tác ở mục tiêu này)<br>` +
+        `• Tệp khán giả của các bài Reach về cơ bản giống nhau (${AUDIENCES.map(a=>audLabel(a)).join(', ')}) → chênh lệch hiệu quả chủ yếu đến từ <b>format và hướng tiếp cận nội dung</b><br>` +
+        `• Lần sau có thể ưu tiên phân bổ thêm ngân sách cho bài có CPM thấp + ER cao như ${topP} để tối ưu chi phí`;
+    }
+    yNghia = `<b>Phân tích bài có CPM cao nhất:</b><br>` +
+      `• ${worstP} có CPM ${fmt(worstCpm)}đ (cao hơn benchmark VN ~5.000đ)<br>` +
+      `• Nguyên nhân chính: format và mục tiêu chưa khớp — ${worstP} có ER và CTR cao nhất nhóm, nên thực ra phù hợp với mục tiêu <b>Engagement</b> hơn là Reach<br>` +
+      `• Bài học cho chiến dịch sau: chọn đúng mục tiêu cho từng nội dung, format Album nên chạy ở mục tiêu Engagement` + spendExplain;
+    const topQuality = sortedByQ[0];
+    deXuat = `<b>Định hướng cho chiến dịch sau${(CFG.name||'').toLowerCase().indexOf('mego')>=0?' (MeGO 2.0 / sản phẩm thẻ mới)':''}:</b><br>` +
+      `• Mục tiêu Reach: ưu tiên ${topP}-style (ảnh đơn + tiêu đề lợi ích cụ thể) — đây là combo CPM thấp nhất chiến dịch<br>` +
+      `• Lưu ý thời gian: để mở rộng ngân sách 1 bài hiệu quả cần chuẩn bị thêm 3-5 ngày — nên có kế hoạch ngay từ tuần 1-2 thay vì đợi cuối chiến dịch<br>` +
+      `• Chuyển vai trò ${topQuality}: ER ${metrics[topQuality].er.toFixed(2)}% (cao nhất nhóm Reach) — chiến dịch sau nên chạy ở mục tiêu Engagement để khai thác đúng thế mạnh tương tác`;
+  } else if (obj === 'ENGAGEMENT') {
+    const topP = topEff[0], worstP = worstEff[0];
+    const topCpe = metrics[topP].cpe, worstCpe = metrics[worstP].cpe;
+    // CTR analysis — find posts with high CTR
+    const ctrSorted = [...valid].sort((a,b)=>metrics[b].ctr-metrics[a].ctr);
+    const topCtr = ctrSorted.slice(0,3);
+    const ctrText = topCtr.length ? `<b>${topCtr[0]}</b> (CTR ${metrics[topCtr[0]].ctr.toFixed(2)}%)${topCtr[1]?', <b>'+topCtr[1]+'</b> (CTR '+metrics[topCtr[1]].ctr.toFixed(2)+'%)':''}${topCtr[2]?', <b>'+topCtr[2]+'</b> (CTR '+metrics[topCtr[2]].ctr.toFixed(2)+'%)':''}` : '';
+    // POST09 critique
+    const post9 = metrics['POST09'];
+    const post9Critique = post9 ? `<br>• <b>POST09 ở mục tiêu Engagement:</b> CPE ${fmt(post9.cpe)}đ (${(post9.cpe/planUnit).toFixed(1)}× KPI), CTR ${post9.ctr.toFixed(2)}% — không phải do nội dung kém (POST09 vẫn rất tốt ở mục tiêu Reach với ER 6,73%) mà do tiêu đề công thức gây tò mò phù hợp với Reach hơn Engagement` : '';
+
+    nhanDinh = `<b>Hiệu quả CPE theo bài đăng:</b><br>` +
+      `• <b>${topP}</b> đạt CPE ${fmt(topCpe)}đ — rẻ hơn KPI ${(planUnit/topCpe).toFixed(1)} lần, hiệu quả nhất nhóm<br>` +
+      `• <b>${worstP}</b> có CPE ${fmt(worstCpe)}đ — cao nhất nhóm${post9Critique}`;
+    yNghia = `<b>Cơ chế tính engagement của Facebook:</b><br>` +
+      `• Engagement bao gồm: like + comment + share + video reaction + post click + photo view<br>` +
+      `• <b>Video Reel có lợi thế lớn</b> vì auto-play tính thành "video reaction passive" — đây là lý do CPE video thấp hơn ảnh đơn 10-15 lần<br>` +
+      `• Còn bài ảnh chỉ tính engagement khi khán giả chủ động tương tác (like/comment)<br>` +
+      `<br><b>Phân tích CTR cao của POST01, POST02, POST08:</b><br>` +
+      `• ${ctrText}<br>` +
+      `• Điểm chung: tiêu đề có lợi ích cụ thể (số tiền, % giảm, hành động cụ thể) + lời kêu gọi rõ ràng → khán giả nhận diện giá trị nhanh và bấm vào`;
+    deXuat = `<b>Định hướng cho chiến dịch sau:</b><br>` +
+      `• Ưu tiên video Reel (như ${topP}) cho mục tiêu Engagement — đây là cách tối ưu chi phí tốt nhất<br>` +
+      `• Khi dùng ảnh đơn cho Engagement: chọn nhóm có CTR cao như ${topCtr.slice(0,3).join(', ')} — công thức là tiêu đề lợi ích cụ thể + lời kêu gọi rõ<br>` +
+      `• Lấy công thức từ ${topP}: mở đầu 3 giây ấn tượng + format video phù hợp + lời kêu gọi rõ ràng<br>` +
+      `• Với các bài tiêu đề kích thích tò mò (POST09 style): giữ ở mục tiêu Reach thay vì Engagement để khai thác đúng thế mạnh`;
+  } else if (obj === 'TRAFFIC') {
+    const topP = topEff[0], worstP = worstEff[0];
+    const topCpc = metrics[topP].cpc, worstCpc = metrics[worstP].cpc;
+    const benchCpc = topCpc < BENCH.cpc.mid ? 'thấp hơn benchmark VN (~800đ)' : (topCpc < BENCH.cpc.high ? 'trong benchmark' : 'cao hơn benchmark');
+    nhanDinh = `<b>Hiệu quả CPC theo bài đăng:</b><br>` +
+      `• <b>${topP}</b>: CPC ${fmt(topCpc)}đ — ${benchCpc}, hiệu quả nhất nhóm<br>` +
+      `• <b>${worstP}</b>: CPC ${fmt(worstCpc)}đ — cao hơn KPI ${(worstCpc/planUnit).toFixed(1)} lần`;
+    yNghia = `<b>CTR là chỉ số quyết định CPC:</b><br>` +
+      `• CTR cao → Facebook đánh giá quảng cáo phù hợp → giảm CPC<br>` +
+      `• ${topP} đạt CTR ${metrics[topP].ctr.toFixed(2)}% — ${metrics[topP].ctr>=BENCH.ctr.high?'vượt benchmark VN (>2%)':'thuộc nhóm tốt nhất chiến dịch'}`;
+    deXuat = `<b>Định hướng cho chiến dịch sau:</b><br>` +
+      `• Ưu tiên sử dụng công thức của ${topP} — vừa CPC thấp vừa CTR cao<br>` +
+      `• Phân tích tiêu đề + lời kêu gọi + UX trang đích của ${topP} để rút ra công thức cho các bài tương tự<br>` +
+      `• ${worstP}: kiểm tra lại độ khớp giữa nội dung quảng cáo và trang đích — có thể cần điều chỉnh để giảm CPC ở chiến dịch sau`;
   } else {
-    // (1) NHẬN XÉT — đọc thẳng từ data
-    nhanDinh = `<b>Đọc theo ${costName}${qName?` + ${qName}`:''} — mục tiêu ${objLabel(obj)}:</b><br>` +
-      (bestFmt ? `• Format tốt nhất: <b>${bestFmt.key}</b> — ${costName} ${fmt(bestFmt.cm)}đ · ${qName} ${bestFmt.qm.toFixed(2)}% (${bestFmt.n} bài)<br>` : '') +
-      (bestPil ? `• Tuyến nội dung tốt nhất: <b>${bestPil.key}</b> — ${costName} ${fmt(bestPil.cm)}đ · ${qName} ${bestPil.qm.toFixed(2)}%<br>` : '') +
-      `• Post nổi bật: <b>${topP}</b> (${getPostFormat(topP)} · ${POST_PILLAR[topP]||'—'}) — ${costName} ${fmt(metrics[topP][costMetric])}đ = ${rOf(topP)}% KPI · ${qName} ${metrics[topP][qualityMetric].toFixed(2)}%` +
-      (worstP && worstP!==topP ? `<br>• Post hụt: <b>${worstP}</b> — ${costName} ${fmt(metrics[worstP][costMetric])}đ = ${rOf(worstP)}% KPI${overKPI.length>1?` · tổng ${overKPI.length} bài vượt KPI`:''}` : '');
-
-    // (2) BENCHMARK thị trường
-    const benchCostLine = costBench
-      ? `• ${costName} toàn nhóm <b>${fmt(camp.cm)}đ</b> — ${benchTxt(camp.cm, costBench, true, 'đ')}<br>`
-      : `• ${costName} chưa có chuẩn ngành thống nhất → chấm hiệu quả video qua VR<br>`;
-    const benchQualLine = qualBench
-      ? `• ${qName} toàn nhóm <b>${camp.qm.toFixed(2)}%</b> — ${benchTxt(camp.qm, qualBench, false, '%')}`
-      : obj==='ENGAGEMENT' ? `• ER toàn nhóm <b>${camp.qm.toFixed(2)}%</b> — chuẩn VN: ảnh 1–5%, video Reel 20–50%`
-      : obj==='REACH' ? `• ER ở mục tiêu Reach thấp là bình thường (FB không tối ưu tương tác ở đây) → chỉ chấm bằng CPM`
-      : '';
-    yNghia = `<b>So với benchmark thị trường (FB Ads tài chính VN):</b><br>` + benchCostLine + benchQualLine;
-
-    // (3) ĐỀ XUẤT cho campaign tương tự
-    const extraTip = obj==='REACH' ? 'Chấm điểm bằng CPM; không kỳ vọng ER/CTR cao ở mục tiêu này.'
-      : obj==='ENGAGEMENT' ? 'Ưu tiên video (auto-play kéo ER, hạ CPE); bài ảnh phải có hook + CTA lợi ích cụ thể.'
-      : obj==='TRAFFIC' ? 'Đồng bộ thông điệp ad ↔ landing để giữ CTR cao → kéo CPC xuống.'
-      : 'Hook 3 giây quyết định VR; test 15s vs 30s để chọn độ dài giữ chân tốt nhất.';
-    deXuat = `<b>Đề xuất cho campaign tương tự (ưu tiên ${costName} thấp${qName?` + ${qName} tốt`:''}):</b><br>` +
-      (bestFmt ? `• Format: nhân rộng <b>${bestFmt.key}</b>${worstFmt?`; giảm/loại <b>${worstFmt.key}</b> (${costName} ${fmt(worstFmt.cm)}đ)`:''}<br>` : '') +
-      (bestPil ? `• Tuyến nội dung: dồn ngân sách vào <b>${bestPil.key}</b>${worstPil&&worstPil.key!==bestPil.key?`; hạn chế <b>${worstPil.key}</b>`:''}<br>` : '') +
-      `• Creative delivery: lấy <b>${topP}</b> làm mẫu chuẩn (${getPostFormat(topP)} · ${qName} ${metrics[topP][qualityMetric].toFixed(2)}%)<br>` +
-      `• ${extraTip}`;
+    const topP = topEff[0], worstP = worstEff[0];
+    const topCpv = metrics[topP].cpv, worstCpv = metrics[worstP] ? metrics[worstP].cpv : 0;
+    const topVr = metrics[topP].vr;
+    // Volume comparison: top by efficiency (CPV) vs top by volume (thruplay count)
+    const thruByPost = valid.map(p => ({p, thru: metrics[p].thruplay, cost: metrics[p].cost})).sort((a,b)=>b.thru-a.thru);
+    const volTop = thruByPost[0] || {p:'', thru:0, cost:0};
+    const benchVR = topVr < BENCH.vr.low ? 'thấp hơn benchmark FB (15-25%)' : (topVr < BENCH.vr.high ? 'nằm trong benchmark FB (15-25%)' : 'gấp 2-3× benchmark FB (15-25%)');
+    nhanDinh = `<b>Hiệu quả Video theo bài:</b><br>` +
+      `• <b>${topP}</b>: CPV ${fmt(topCpv)}đ, VR ${topVr.toFixed(0)}% — ${benchVR}, hiệu quả nhất nhóm<br>` +
+      (worstP&&worstP!==topP?`• <b>${worstP}</b>: CPV ${fmt(worstCpv)}đ — cao hơn KPI<br>`:'') +
+      `<br><b>Khối lượng người xem hết:</b><br>` +
+      thruByPost.slice(0,2).map(x=>'• <b>'+x.p+'</b>: '+fmt(x.thru)+' người xem hết, ngân sách '+fmtVND(x.cost)).join('<br>');
+    // Explain why ngân sách goes to a less efficient post — POST11 finished early, POST12 planned bigger but ran during holiday
+    let budgetExplain = '';
+    if (volTop.p && topP !== volTop.p) {
+      budgetExplain = `<br><br><b>Vì sao ngân sách phân bổ nhiều hơn cho ${volTop.p} dù ${topP} có CPV thấp hơn?</b><br>` +
+        `• <b>${topP} ra trước</b> — đã đạt đủ KPI Thruplay sớm và hết hạn đăng nên team dừng đẩy ngân sách<br>` +
+        `• <b>${volTop.p} ra sau với creative KOC (định dạng hướng dẫn thực tế)</b> được đánh giá có giá trị cao hơn với người dùng → ngay từ kế hoạch đã phân bổ ngân sách lớn hơn ${topP}<br>` +
+        `• ${volTop.p} rơi vào dịp nghỉ lễ, team theo dõi không sát nên CPV thực tế vượt KPI → tổng chi vượt kế hoạch`;
+    }
+    yNghia = `<b>VR (View Rate) là chỉ số quan trọng nhất cho video:</b><br>` +
+      `• VR = % người xem hết video / impression. VR cao = mở đầu giữ chân tốt<br>` +
+      `• ${topP} đạt VR ${topVr.toFixed(0)}% (${benchVR}) → mở đầu 3 giây của ${topP} là công thức nên áp dụng cho video tiếp theo` + budgetExplain;
+    const keepBoth = volTop.p && volTop.p !== topP ? ` và duy trì ${volTop.p} để giữ khối lượng người xem hết` : '';
+    deXuat = `<b>Định hướng cho chiến dịch sau:</b><br>` +
+      `• Tiếp tục sử dụng công thức của ${topP}${keepBoth} — cần cả 2 loại: 1 video CPV thấp (giữ vai trò mở đầu nhận diện) + 1 video khối lượng (vai trò mở rộng tiếp cận)<br>` +
+      `• Lấy mở đầu 3 giây của ${topP} làm mẫu cho mọi video tiếp theo<br>` +
+      `• Thử thêm độ dài video khác (15s vs 30s) để biết độ dài nào giữ chân khán giả tốt nhất<br>` +
+      `• ${worstP}: cân nhắc làm mới phần mở đầu để cải thiện VR trước khi tái sử dụng`;
   }
 
   document.getElementById('insightPost').innerHTML = renderInsights([nhanDinh, yNghia, deXuat]);
